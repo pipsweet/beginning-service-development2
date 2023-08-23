@@ -29,8 +29,21 @@ builder.Services.AddHttpClient<BusinessClockApiAdapter>(client =>
 {
     client.BaseAddress = new Uri(businessClockAddress);
 
-}).AddPolicyHandler(SrePolicies.GetDefaultRetryPolicy());
-  
+}).AddPolicyHandler(SrePolicies.GetDefaultRetryPolicy())
+  .AddPolicyHandler(SrePolicies.GetDefaultCircuitBreaker());
+
+// Lazy - create the SystemTime only in response to the first request that needs it, then keep it around.
+builder.Services.AddSingleton<ISystemTime, SystemTime>();
+
+//var systemTime = new SystemTime(); // Eager!
+//builder.Services.AddSingleton<ISystemTime>(systemTime);
+
+
+// Lazy Factory
+//builder.Services.AddSingleton<ISystemTime>(sp =>
+//{
+//    return new SystemTime(sp.GetRequiredService<ILogger>());
+//});
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
