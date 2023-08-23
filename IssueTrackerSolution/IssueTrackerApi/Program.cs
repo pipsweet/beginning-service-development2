@@ -21,6 +21,10 @@ builder.Services.AddMarten(options =>
     options.Connection(dataConnectionString);
     options.AutoCreateSchemaObjects = Weasel.Core.AutoCreate.All; // Classroom-ish
 });
+
+
+
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
