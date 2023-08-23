@@ -1,7 +1,9 @@
 ﻿using IssueTrackerApi.Models;
 using Marten;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace IssueTrackerApi.Controllers;
 
@@ -24,7 +26,7 @@ public class IssuesController : ControllerBase
     }
 
     [HttpPost("/closed-issues")]
-   
+
     public async Task<ActionResult> CloseTheIssue([FromBody] IssueResponse issue)
     {
         using var session = _documentStore.LightweightSession();
@@ -34,7 +36,8 @@ public class IssuesController : ControllerBase
         if (savedIssue is null)
         {
             return BadRequest("We don't have that issue");
-        } else
+        }
+        else
         {
             savedIssue.Status = IssueStatus.Closed;
             session.Store(savedIssue);
@@ -42,6 +45,14 @@ public class IssuesController : ControllerBase
             return Accepted();
 
         }
+    }
+
+    [HttpGet("/issues2")]
+    public async Task<ActionResult> GetIssues()
+    {
+        using var session = _documentStore.LightweightSession();
+        var data = await session.Query<IssueResponse>().ToListAsync();
+        return Ok(data);
     }
 
     [HttpGet("/issues")]
@@ -52,15 +63,17 @@ public class IssuesController : ControllerBase
         IReadOnlyList<IssueResponse>? data = null;
         if (status == "All")
         {
-             data = await session.Query<IssueResponse>().ToListAsync();
-        } else
+            data = await session.Query<IssueResponse>().ToListAsync();
+        }
+        else
         {
             IssueStatus statusEnum;
-            if(Enum.TryParse<IssueStatus>(status, true,  out statusEnum))
+            if (Enum.TryParse<IssueStatus>(status, true, out statusEnum))
             {
                 data = await session.Query<IssueResponse>().Where(i => i.Status == statusEnum).ToListAsync();
 
-            } else
+            }
+            else
             {
                 data = new List<IssueResponse>();
             }
@@ -68,7 +81,7 @@ public class IssuesController : ControllerBase
         }
 
 
-        return Ok(new { issues = data});
+        return Ok(new { issues = data });
     }
 
     [HttpGet("/issues/{issueId}")]
@@ -79,10 +92,11 @@ public class IssuesController : ControllerBase
             .Where(i => i.Id == issueId)
             .SingleOrDefaultAsync();
 
-        if(data is not null)
+        if (data is not null)
         {
             return Ok(data);
-        } else
+        }
+        else
         {
             return NotFound();
         }
@@ -91,7 +105,7 @@ public class IssuesController : ControllerBase
     [HttpPost("/issues")]
     public async Task<ActionResult> AddIssue([FromBody] IssueCreateRequest request)
     {
-  
+
 
         var issue = new IssueResponse
         {

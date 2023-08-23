@@ -1,3 +1,5 @@
+using IssueTrackerApi;
+using IssueTrackerApi.Services;
 using Marten;
 using System.Text.Json.Serialization;
 
@@ -22,9 +24,13 @@ builder.Services.AddMarten(options =>
     options.AutoCreateSchemaObjects = Weasel.Core.AutoCreate.All; // Classroom-ish
 });
 
+var businessClockAddress = builder.Configuration.GetValue<string>("business-clock-api") ?? throw new Exception("Need an address for the business clock");
+builder.Services.AddHttpClient<BusinessClockApiAdapter>(client =>
+{
+    client.BaseAddress = new Uri(businessClockAddress);
 
-
-
+}).AddPolicyHandler(SrePolicies.GetDefaultRetryPolicy());
+  
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
